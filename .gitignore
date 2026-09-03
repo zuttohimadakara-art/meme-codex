@@ -1,0 +1,23 @@
+# Build artifacts
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Node (in case future tooling is added)
+node_modules/
+package-lock.json
+
+# Worker scratch files (we ship the .js data files, the .json + csv are intermediates)
+data/*.json
+data/*.csv
+data/validate.js
+kym_data_*.json
+*.py
+
+# Local server / log artifacts
+server.log
+server.err.log
+
