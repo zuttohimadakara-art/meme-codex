@@ -21,3 +21,6 @@ kym_data_*.json
 server.log
 server.err.log
 
+
+commit_msg.txt
+

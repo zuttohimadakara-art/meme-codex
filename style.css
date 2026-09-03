@@ -1,5 +1,5 @@
-/* ============================================================
-   Meme Codex — Visual Encyclopedia
+﻿/* ============================================================
+   Meme Codex â€” Visual Encyclopedia
    Aesthetic: dark + yellow accent, inspired by StillsLab.
    Audience: millennials. Plain reading. No chaos.
    ============================================================ */
@@ -1049,4 +1049,240 @@ img { max-width: 100%; display: block; }
   padding: 40px 0;
   color: var(--fg-2);
   font-size: 14px;
+}
+
+/* ============================================================
+   SEO Intro Section (TL;DR + definition + tables)
+   ============================================================ */
+.seo-intro {
+  padding: 64px 0;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+}
+
+.tldr-box {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 40px;
+}
+
+.tldr-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.tldr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tldr-list li {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--fg-1);
+  padding: 6px 0 6px 20px;
+  position: relative;
+}
+
+.tldr-list li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.tldr-list strong {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.seo-h2 {
+  font-size: clamp(20px, 2.6vw, 26px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-top: 40px;
+  margin-bottom: 14px;
+  color: var(--fg);
+}
+
+.seo-intro p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--fg-1);
+  margin-bottom: 14px;
+}
+
+.seo-intro p a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.era-table-wrap,
+.year-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.era-table,
+.year-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 540px;
+}
+
+.era-table thead,
+.year-table thead {
+  background: var(--bg-2);
+}
+
+.era-table th,
+.year-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-2);
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.era-table td,
+.year-table td {
+  padding: 12px 16px;
+  color: var(--fg-1);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.era-table tr:last-child td,
+.year-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.era-table strong,
+.year-table strong {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.year-table td:first-child {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.year-table td:nth-child(2) {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* ============================================================
+   FAQ Section
+   ============================================================ */
+.faq-section {
+  padding: 64px 0;
+  background: var(--bg);
+}
+
+.faq-intro {
+  font-size: 15px;
+  color: var(--fg-2);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  background: var(--bg-1);
+  transition: border-color 0.15s var(--ease);
+}
+
+.faq-item:hover {
+  border-color: var(--border-strong);
+}
+
+.faq-item[open] {
+  border-color: var(--accent);
+  background: var(--bg-2);
+}
+
+.faq-item summary {
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  user-select: none;
+  transition: color 0.15s var(--ease);
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary::after {
+  content: "+";
+  font-size: 22px;
+  color: var(--fg-2);
+  font-weight: 300;
+  flex-shrink: 0;
+  transition: transform 0.2s var(--ease), color 0.15s var(--ease);
+}
+
+.faq-item[open] summary::after {
+  content: "−";
+  color: var(--accent);
+}
+
+.faq-item summary:hover {
+  color: var(--accent);
+}
+
+.faq-item p {
+  padding: 0 20px 18px 20px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--fg-1);
+}
+
+.faq-item p a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.faq-item p strong {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .tldr-box { padding: 18px 20px; }
+  .faq-item summary { font-size: 15px; padding: 14px 16px; }
+  .faq-item p { padding: 0 16px 16px 16px; }
 }

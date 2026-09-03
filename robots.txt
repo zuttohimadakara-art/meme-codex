@@ -1,0 +1,6 @@
+# robots.txt for Meme Codex
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://zuttohimadakara-art.github.io/quickfire/sitemap.xml
