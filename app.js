@@ -123,6 +123,8 @@
 
   // Modal
   dom.modalClose.addEventListener('click', closeModal);
+  const modalFootClose = document.getElementById('modalFootClose');
+  if (modalFootClose) modalFootClose.addEventListener('click', closeModal);
   dom.modal.addEventListener('click', (e) => {
     if (e.target === dom.modal) closeModal();
   });
@@ -271,8 +273,20 @@
     `;
     dom.modalTitle.textContent = m.name;
     dom.modalDesc.textContent = m.short_desc || '';
-    dom.modalOrigin.textContent = m.origin_story || '—';
-    dom.modalMeaning.textContent = m.meaning || '—';
+
+    // Origin: replace inner if we have data, else keep the empty-msg placeholder
+    if (m.origin_story && m.origin_story.trim()) {
+      dom.modalOrigin.innerHTML = escapeHTML(m.origin_story);
+    } else {
+      dom.modalOrigin.innerHTML = '<span class="empty-msg">No origin story recorded for this meme yet.</span>';
+    }
+
+    if (m.meaning && m.meaning.trim()) {
+      dom.modalMeaning.innerHTML = escapeHTML(m.meaning);
+    } else {
+      dom.modalMeaning.innerHTML = '<span class="empty-msg">No usage notes recorded for this meme yet.</span>';
+    }
+
     dom.modalTags.innerHTML = (m.tags || [])
       .map(t => `<span class="modal-tag">#${escapeHTML(t)}</span>`)
       .join('');

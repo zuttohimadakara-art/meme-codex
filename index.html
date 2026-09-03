@@ -204,7 +204,10 @@
 <!-- ============ MODAL ============ -->
 <div class="modal-backdrop" id="modal" hidden aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+    <button class="modal-close" id="modalClose" aria-label="Close" title="Close (Esc)">
+      <span class="close-x">×</span>
+      <span class="close-hint">Esc</span>
+    </button>
     <div class="modal-media">
       <img id="modalImage" alt="">
       <div class="modal-fallback" id="modalFallback" hidden>
@@ -218,15 +221,16 @@
       <p class="modal-desc" id="modalDesc"></p>
       <div class="modal-section">
         <h3>Origin</h3>
-        <p id="modalOrigin"></p>
+        <p id="modalOrigin"><span class="empty-msg">No origin story recorded for this meme yet.</span></p>
       </div>
       <div class="modal-section">
         <h3>Meaning &amp; use</h3>
-        <p id="modalMeaning"></p>
+        <p id="modalMeaning"><span class="empty-msg">No usage notes recorded for this meme yet.</span></p>
       </div>
       <div class="modal-tags" id="modalTags"></div>
       <div class="modal-foot">
         <a id="modalSource" target="_blank" rel="noopener" class="modal-source">Source ↗</a>
+        <button class="modal-foot-close" id="modalFootClose">Close</button>
       </div>
     </div>
   </div>

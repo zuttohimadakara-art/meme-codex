@@ -833,27 +833,48 @@ img { max-width: 100%; display: block; }
 
 .modal-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 36px;
-  height: 36px;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: var(--fg);
-  font-size: 24px;
-  line-height: 1;
+  border: 1px solid var(--border-strong);
   border-radius: 50%;
-  z-index: 10;
+  z-index: 20;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s var(--ease);
+  gap: 0;
+  padding: 0;
+  transition: background 0.15s var(--ease), transform 0.15s var(--ease), border-color 0.15s var(--ease);
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .modal-close:hover {
   background: var(--accent);
   color: #000;
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.close-x {
+  font-size: 22px;
+  line-height: 1;
+  margin-top: -2px;
+}
+
+.close-hint {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: -1px;
+  opacity: 0.75;
 }
 
 .modal-media {
@@ -960,6 +981,12 @@ img { max-width: 100%; display: block; }
   line-height: 1.6;
 }
 
+.empty-msg {
+  color: var(--fg-3);
+  font-style: italic;
+  font-size: 13px;
+}
+
 .modal-tags {
   display: flex;
   flex-wrap: wrap;
@@ -981,6 +1008,11 @@ img { max-width: 100%; display: block; }
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .modal-source {
@@ -988,6 +1020,24 @@ img { max-width: 100%; display: block; }
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.modal-foot-close {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--fg);
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+
+.modal-foot-close:hover {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
 }
 
 @media (max-width: 768px) {
