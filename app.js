@@ -12,17 +12,116 @@
     .concat(Array.isArray(window.MEMES_EN) ? window.MEMES_EN : [])
     .concat(Array.isArray(window.MEMES_INTL) ? window.MEMES_INTL : []);
 
-  // Build a slug->image lookup from either file
-  // (already in each entry, but we keep this here for future hookups)
+  // Cache for Wikipedia lookups, keyed by meme id.
+  const imageCache = new Map();
 
-  // ---------- 2. State ----------
+  // ---------- 2. Country color palettes for SVG placeholders ----------
+  const PALETTES = {
+    US:       ['#1e3a8a', '#dc2626'],
+    GB:       ['#1e3a8a', '#dc2626'],
+    JP:       ['#dc2626', '#fde68a'],
+    KR:       ['#dc2626', '#3b82f6'],
+    CN:       ['#dc2626', '#fbbf24'],
+    FR:       ['#1e3a8a', '#dc2626'],
+    DE:       ['#1f2937', '#fbbf24'],
+    RU:       ['#1e3a8a', '#dc2626'],
+    BR:       ['#16a34a', '#fbbf24'],
+    MX:       ['#16a34a', '#dc2626'],
+    Internet: ['#374151', '#0f172a'],
+    AR:       ['#60a5fa', '#fde68a'],
+    CL:       ['#dc2626', '#1e3a8a'],
+    IT:       ['#16a34a', '#dc2626'],
+    ID:       ['#dc2626', '#fde68a'],
+    PH:       ['#1e3a8a', '#fbbf24'],
+    TR:       ['#dc2626', '#fde68a'],
+    NG:       ['#16a34a', '#fde68a'],
+    FI:       ['#cbd5e1', '#1e3a8a'],
+  };
+  function paletteFor(country) {
+    return PALETTES[country] || ['#E8BD2C', '#b89522']; // brand yellow fallback
+  }
+
+  // ---------- 3. SVG placeholder (data URL) ----------
+  function svgDataUrl(m) {
+    const first = (m.name || '?').charAt(0).toUpperCase();
+    const [c1, c2] = paletteFor(m.origin_country);
+    const name = (m.name || '').slice(0, 26);
+    const year = m.year || '';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${c1}"/>
+          <stop offset="100%" stop-color="${c2}"/>
+        </linearGradient>
+        <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.08)"/>
+        </pattern>
+      </defs>
+      <rect width="400" height="400" fill="url(#g)"/>
+      <rect width="400" height="400" fill="url(#dots)"/>
+      <text x="200" y="225" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="180" font-weight="800" text-anchor="middle" fill="rgba(255,255,255,0.95)" style="letter-spacing:-0.05em">${escapeXML(first)}</text>
+      <text x="200" y="320" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="700" text-anchor="middle" fill="rgba(255,255,255,0.92)">${escapeXML(name)}</text>
+      <text x="200" y="350" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="500" text-anchor="middle" fill="rgba(255,255,255,0.7)">${escapeXML(year)}${m.origin_country ? ' · ' + escapeXML(m.origin_country) : ''}</text>
+    </svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
+
+  function escapeXML(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ---------- 4. Wikipedia image lookup ----------
+  // Best-effort: search Wikipedia for the meme name, return the lead image URL.
+  // Returns null if anything fails.
+  async function fetchWikipediaImage(m) {
+    if (imageCache.has(m.id)) return imageCache.get(m.id);
+    const queries = uniqueQueriesFor(m);
+    for (const q of queries) {
+      try {
+        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&srlimit=1&origin=*`;
+        const searchRes = await fetch(searchUrl, { headers: { 'Api-User-Agent': 'MemeCodex/1.0' } });
+        if (!searchRes.ok) continue;
+        const searchData = await searchRes.json();
+        const hit = searchData?.query?.search?.[0];
+        if (!hit) continue;
+        const title = hit.title;
+        const imgUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=original|thumbnail&pithumbsize=600&format=json&titles=${encodeURIComponent(title)}&origin=*`;
+        const imgRes = await fetch(imgUrl, { headers: { 'Api-User-Agent': 'MemeCodex/1.0' } });
+        if (!imgRes.ok) continue;
+        const imgData = await imgRes.json();
+        const pages = imgData?.query?.pages || {};
+        const page = Object.values(pages)[0];
+        const src = page?.original?.source || page?.thumbnail?.source;
+        if (src) {
+          imageCache.set(m.id, src);
+          return src;
+        }
+      } catch (e) {
+        // continue to next query
+      }
+    }
+    imageCache.set(m.id, null);
+    return null;
+  }
+
+  function uniqueQueriesFor(m) {
+    const base = [m.name, (m.tags || []).find(t => t.length > 3), (m.short_desc || '').split(' ').slice(0, 3).join(' ')].filter(Boolean);
+    return Array.from(new Set(base)).slice(0, 3);
+  }
+
+  // ---------- 5. Resolve the best available image for a meme ----------
+  function resolvedImage(m) {
+    if (m.image_url) return m.image_url;
+    return svgDataUrl(m);
+  }
+
+  // ---------- 6. State ----------
   const state = {
     search: '',
     filters: { era: 'all', region: 'all', category: 'all' },
-    sortBy: 'year', // could be 'peak' later
   };
 
-  // ---------- 3. DOM refs ----------
+  // ---------- 7. DOM refs ----------
   const $ = (id) => document.getElementById(id);
   const dom = {
     grid: $('memeGrid'),
@@ -39,19 +138,16 @@
     clearFilters: $('clearFilters'),
     modal: $('modal'),
     modalImage: $('modalImage'),
-    modalFallback: $('modalFallback'),
-    modalKymLink: $('modalKymLink'),
     modalMeta: $('modalMeta'),
     modalTitle: $('modalTitle'),
     modalDesc: $('modalDesc'),
     modalOrigin: $('modalOrigin'),
     modalMeaning: $('modalMeaning'),
     modalTags: $('modalTags'),
-    modalSource: $('modalSource'),
     modalClose: $('modalClose'),
   };
 
-  // ---------- 4. Init ----------
+  // ---------- 8. Init ----------
   if (allMemes.length === 0) {
     dom.grid.innerHTML = `<div class="loading-message">No meme data loaded. Make sure <code>data/memes_en.js</code> and <code>data/memes_intl.js</code> exist.</div>`;
     return;
@@ -65,14 +161,14 @@
   dom.statEra.textContent = eras.size;
   dom.totalCount.textContent = allMemes.length;
 
-  // Featured picks (curator's selection: well-known global icons)
+  // Featured picks
   const featuredIds = [
     'doge', 'pepe', 'distracted-boyfriend', 'rickroll', 'nyan-cat',
     'grumpy-cat', 'hide-the-pain-harold', 'this-is-fine', 'success-kid',
     'bad-luck-brian', 'coffin-dance', 'among-us-sus', 'harambe',
     'salt-bae', 'expanding-brain', 'surprised-pikachu', 'mocking-spongebob',
-    'kakao-emoticon', 'gangnam-style', 'squid-game', 'chinese-bilibili-study-meme',
-    'russian-natasha-meme', 'french-quelle-horreur'
+    'kakao-emoticon', 'gangnam-style', 'squid-game', 'i-dont-want-to-study',
+    'natasha-we-dropped', 'quelle-horreur'
   ];
   const featuredPicks = featuredIds
     .map(id => allMemes.find(m => m.id === id))
@@ -86,7 +182,6 @@
     });
   }
 
-  // Timeline (20-year bar chart, 2007–2026)
   renderTimeline();
 
   // Filter chips
@@ -132,7 +227,36 @@
     if (e.key === 'Escape' && !dom.modal.hidden) closeModal();
   });
 
-  // ---------- 5. Render ----------
+  // ---------- 9. Lazy Wikipedia image loader ----------
+  // After each render, attach an IntersectionObserver to each card that lacks
+  // a real image. When the card scrolls into view, we try to upgrade its
+  // src to a Wikipedia image; if Wikipedia fails, leave the SVG placeholder.
+  const lazyObserver = ('IntersectionObserver' in window) ? new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const memeId = el.dataset.id;
+      const meme = allMemes.find(m => m.id === memeId);
+      lazyObserver.unobserve(el);
+      if (!meme || meme.image_url) return;
+      fetchWikipediaImage(meme).then(url => {
+        if (!url) return;
+        // Cache back onto the meme object so the modal also benefits
+        meme.image_url = url;
+        // Update the card image
+        const img = el.querySelector('img.card-img');
+        if (img) {
+          img.src = url;
+          img.onerror = () => {
+            // If even the wikipedia image fails, fall back to the svg
+            img.src = svgDataUrl(meme);
+          };
+        }
+      });
+    });
+  }, { rootMargin: '200px 0px' }) : null;
+
+  // ---------- 10. Render ----------
   function renderGrid() {
     const filtered = allMemes.filter(m => {
       if (state.filters.era !== 'all' && m.era !== state.filters.era) return false;
@@ -165,22 +289,20 @@
       const id = el.dataset.id;
       const meme = allMemes.find(m => m.id === id);
       el.addEventListener('click', () => openModal(meme));
+      // Observe cards that need a Wikipedia upgrade
+      if (lazyObserver && meme && !meme.image_url) {
+        lazyObserver.observe(el);
+      }
     });
   }
 
   function cardHTML(m) {
-    const placeholderText = (m.name || '?').charAt(0).toUpperCase();
     const typeShort = shortType(m.category);
-    const imgHTML = m.image_url
-      ? `<img src="${escapeHTML(m.image_url)}" alt="${escapeHTML(m.name)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
-      : '';
-    const placeholderHTML = `<div class="placeholder" style="${m.image_url ? 'display:none' : 'display:flex'}">${escapeHTML(placeholderText)}</div>`;
-
+    const initialSrc = resolvedImage(m);
     return `
       <article class="meme-card" data-id="${escapeHTML(m.id)}">
         <div class="meme-thumb">
-          ${imgHTML}
-          ${placeholderHTML}
+          <img class="card-img" src="${escapeHTML(initialSrc)}" alt="${escapeHTML(m.name)}" loading="lazy">
           <span class="year-badge">${m.year || '—'}</span>
           <span class="type-tag">${typeShort}</span>
         </div>
@@ -193,14 +315,11 @@
   }
 
   function featuredCardHTML(m) {
-    const placeholderText = (m.name || '?').charAt(0).toUpperCase();
-    const imgHTML = m.image_url
-      ? `<img src="${escapeHTML(m.image_url)}" alt="${escapeHTML(m.name)}" loading="lazy" onerror="this.style.display='none';">`
-      : '';
+    const initialSrc = resolvedImage(m);
     return `
       <div class="featured-card" data-id="${escapeHTML(m.id)}">
         <span class="badge">Pick</span>
-        ${imgHTML}
+        <img src="${escapeHTML(initialSrc)}" alt="${escapeHTML(m.name)}" loading="lazy">
         <div class="gradient"></div>
         <div class="info">
           <h3>${escapeHTML(m.name)}</h3>
@@ -243,11 +362,9 @@
     });
     dom.timeline.innerHTML = html;
 
-    // Clicking a bar filters the grid
     dom.timeline.querySelectorAll('.timeline-bar').forEach(bar => {
       bar.addEventListener('click', () => {
         const year = parseInt(bar.dataset.year, 10);
-        // Reset region/category, set search to the year
         state.filters = { era: 'all', region: 'all', category: 'all' };
         state.search = String(year);
         dom.searchInput.value = String(year);
@@ -262,8 +379,8 @@
     });
   }
 
-  // ---------- 6. Modal ----------
-  function openModal(m) {
+  // ---------- 11. Modal ----------
+  async function openModal(m) {
     if (!m) return;
     dom.modalMeta.innerHTML = `
       <span class="pill year">${m.year || '—'}</span>
@@ -274,7 +391,6 @@
     dom.modalTitle.textContent = m.name;
     dom.modalDesc.textContent = m.short_desc || '';
 
-    // Origin: replace inner if we have data, else keep the empty-msg placeholder
     if (m.origin_story && m.origin_story.trim()) {
       dom.modalOrigin.innerHTML = escapeHTML(m.origin_story);
     } else {
@@ -291,28 +407,22 @@
       .map(t => `<span class="modal-tag">#${escapeHTML(t)}</span>`)
       .join('');
 
-    // Image
-    if (m.image_url) {
-      dom.modalImage.src = m.image_url;
-      dom.modalImage.alt = m.name;
-      dom.modalImage.style.display = 'block';
-      dom.modalFallback.hidden = true;
-      dom.modalImage.onerror = () => {
-        dom.modalImage.style.display = 'none';
-        dom.modalFallback.hidden = false;
-        dom.modalKymLink.href = `https://knowyourmeme.com/search?q=${encodeURIComponent(m.name)}`;
-      };
-    } else {
-      dom.modalImage.style.display = 'none';
-      dom.modalFallback.hidden = false;
-      dom.modalKymLink.href = `https://knowyourmeme.com/search?q=${encodeURIComponent(m.name)}`;
+    // Image: try the best available, upgrade async if needed
+    let imgUrl = m.image_url;
+    if (!imgUrl) {
+      // Try Wikipedia lazily
+      imgUrl = await fetchWikipediaImage(m);
+      if (imgUrl) m.image_url = imgUrl;
     }
+    if (!imgUrl) imgUrl = svgDataUrl(m);
 
-    // Source link — prefer KYM search by name
-    const kym = `https://knowyourmeme.com/search?q=${encodeURIComponent(m.name)}`;
-    dom.modalSource.href = kym;
+    dom.modalImage.src = imgUrl;
+    dom.modalImage.alt = m.name;
+    dom.modalImage.onerror = () => {
+      // If the resolved URL still fails (e.g. Wikipedia image 404), fall back
+      dom.modalImage.src = svgDataUrl(m);
+    };
 
-    // Open: clear inline display so CSS owns it, then set hidden=false
     dom.modal.style.display = '';
     dom.modal.hidden = false;
     dom.modal.setAttribute('aria-hidden', 'false');
@@ -320,16 +430,13 @@
   }
 
   function closeModal() {
-    // Belt-and-suspenders: set both the `hidden` attribute AND force inline
-    // display:none, so the modal closes even if a future CSS change re-breaks
-    // the [hidden] selector.
     dom.modal.hidden = true;
     dom.modal.style.display = 'none';
     dom.modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
   }
 
-  // ---------- 7. Helpers ----------
+  // ---------- 12. Helpers ----------
   function escapeHTML(s) {
     return String(s || '')
       .replace(/&/g, '&amp;')
