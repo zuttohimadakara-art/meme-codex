@@ -806,6 +806,12 @@ img { max-width: 100%; display: block; }
   animation: fadeIn 0.2s var(--ease);
 }
 
+/* HTML `hidden` attribute must beat `display: flex` above, otherwise the modal
+   never actually closes when JS sets element.hidden = true. */
+.modal-backdrop[hidden] {
+  display: none;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

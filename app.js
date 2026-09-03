@@ -312,13 +312,19 @@
     const kym = `https://knowyourmeme.com/search?q=${encodeURIComponent(m.name)}`;
     dom.modalSource.href = kym;
 
+    // Open: clear inline display so CSS owns it, then set hidden=false
+    dom.modal.style.display = '';
     dom.modal.hidden = false;
     dom.modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
   }
 
   function closeModal() {
+    // Belt-and-suspenders: set both the `hidden` attribute AND force inline
+    // display:none, so the modal closes even if a future CSS change re-breaks
+    // the [hidden] selector.
     dom.modal.hidden = true;
+    dom.modal.style.display = 'none';
     dom.modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
   }
