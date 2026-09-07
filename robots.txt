@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://zuttohimadakara-art.github.io/quickfire/sitemap.xml
+Sitemap: https://getquickfire.com/sitemap.xml
