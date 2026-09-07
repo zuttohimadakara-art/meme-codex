@@ -1112,6 +1112,18 @@ img { max-width: 100%; display: block; }
   letter-spacing: -0.02em;
   line-height: 1.2;
   margin-top: 40px;
+}
+
+.editorial-disclaimer {
+  margin-top: 18px;
+  padding: 14px 18px;
+  background: rgba(255, 200, 90, 0.08);
+  border-left: 3px solid rgba(255, 200, 90, 0.5);
+  border-radius: 6px;
+  font-size: 0.95em;
+  line-height: 1.55;
+  color: var(--muted, #a4a4b0);
+}
   margin-bottom: 14px;
   color: var(--fg);
 }
