@@ -14,8 +14,10 @@ package-lock.json
 data/*.json
 data/*.csv
 data/validate.js
+data/_*.js
 kym_data_*.json
 *.py
+__pycache__/
 
 # Local server / log artifacts
 server.log
